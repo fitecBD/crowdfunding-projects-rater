@@ -32,6 +32,15 @@ public class App {
 		// get urls of all projects from the first page (search with empty query
 		// and order by newest)
 
+		getJSON1();
+
+	}
+
+	/**
+	 * Récupère les urls des projets depuis la page des résultats de recherche
+	 * puis requête la page du projet et récupère le JSON dessus
+	 */
+	public static void getJSON1() {
 		try {
 			// récupération des urls des 20 premiers projets
 			String url = "https://www.kickstarter.com/discover/advanced?sort=newest";
@@ -53,7 +62,33 @@ public class App {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
 
+	/**
+	 * Récupère les données des projets depuis la page résultat de recherche
+	 */
+	public static void getJSON2() {
+		try {
+			// récupération des urls des 20 premiers projets
+			String url = "https://www.kickstarter.com/discover/advanced?sort=newest";
+			Document doc;
+			JSONObject jsonObject = null;
+			doc = Jsoup.connect(url).get();
+			Elements scriptTags = doc.getElementsByClass("project-thumbnail-wrap");
+
+			// récupération du JSON contenant les infos de chaque projet
+			Collection<JSONObject> collection = new ArrayList<>();
+			for (int i = 0; i < scriptTags.size(); i++) {
+				Element element = scriptTags.get(i);
+				String urlProjet = "https://www.kickstarter.com" + element.attr("href");
+				collection.add(buildJSONObject(urlProjet));
+				String string = "\"";
+			}
+			FileUtils.write(new File("output.json"), new JSONArray(collection).toString(), StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private static void buildPropsMapFromJSON(String url) throws IOException {
@@ -147,14 +182,6 @@ public class App {
 		}
 
 		return jsonObject;
-	}
-
-	public static void mapToJSON(Map<String, String> map) {
-
-	}
-
-	public static void mapToCSV(Map<String, String> map) {
-
 	}
 
 }
