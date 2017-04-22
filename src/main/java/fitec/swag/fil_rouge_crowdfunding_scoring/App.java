@@ -28,31 +28,46 @@ public class App {
 	public static void main(String[] args) {
 		// Validate.isTrue(args.length == 1, "usage: supply url to fetch");
 		// String url = args[0];
-		String url = "https://www.kickstarter.com/discover/advanced?woe_id=0&sort=newest&seed=2487379&page=";
+		// String baseUrl =
+		// "https://www.kickstarter.com/discover/advanced?woe_id=23424819&sort=magic&seed=2487938&page=";
+		// String outputFileBase = "kickstarter.scotland-uk." +
+		// getFormattedDate();
+		// getJSON1(baseUrl, outputFileBase, 1);
 
-		// get urls of all projects from the first page (search with empty query
-		// and order by newest)
-
-		getJSON1(url);
-
+		String url = "https://www.kickstarter.com/discover/advanced?woe_id=0&sort=newest&seed=2487379&page=14";
+		String outputFileName = "kickstarter.JsonBase.2017-04-22.page14.json";
+		try {
+			getOneProject(url, "base", outputFileName);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
 	 * Récupère les urls des projets depuis la page des résultats de recherche
 	 * puis requête la page du projet et récupère le JSON dessus
 	 */
-	public static void getJSON1(String baseUrl) {
-		int nbPage = 15;
-		while (true) {
-			String url = baseUrl + nbPage;
-			try {
-				// récupération des urls des 20 premiers projets
-				// String url =
-				// "https://www.kickstarter.com/discover/advanced?ref=discovery_overlay";
-				Document doc;
-				doc = Jsoup.connect(url).get();
-				Elements scriptTags = doc.getElementsByClass("project-thumbnail-wrap");
+	public static void getJSON1(String baseUrl, String outputFileBase, int startPage) {
+		try {
+			getJSON1InnerLocation(baseUrl, outputFileBase, startPage);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
+	private static void getJSON1Inner(String baseUrl, String outputFileBase, int nbPage) throws IOException {
+		Elements scriptTags = null;
+		do {
+			String url = baseUrl + nbPage;
+			System.out.println("scraping page : " + url);
+			Document doc;
+			doc = Jsoup.connect(url).get();
+			// scriptTags =
+			// doc.getElementsByClass("project-thumbnail-wrap");
+			scriptTags = doc.getElementsByAttribute("data-project_pid");
+
+			if (!scriptTags.isEmpty()) {
 				// récupération du JSON contenant les infos de chaque projet
 				Collection<JSONObject> collection = new ArrayList<>();
 				for (int i = 0; i < scriptTags.size(); i++) {
@@ -67,13 +82,72 @@ public class App {
 				result.put("results", collection);
 				result.put("date", new Date().toString());
 
-				String fileName = "kickstarter.JsonBase." + getFormattedDate() + ".page" + nbPage;
-				FileUtils.write(new File(fileName), result.toString(), StandardCharsets.UTF_8);
-				nbPage++;
-			} catch (Exception e) {
-				e.printStackTrace();
-				break;
+				String fileName = outputFileBase + ".page" + nbPage + ".json";
+				FileUtils.write(new File("scotland-uk", fileName), result.toString(), StandardCharsets.UTF_8);
 			}
+			nbPage++;
+		} while (scriptTags != null && !scriptTags.isEmpty());
+	}
+
+	private static void getJSON1InnerLocation(String baseUrl, String outputFileBase, int nbPage) throws IOException {
+		Elements scriptTags = null;
+		do {
+			String url = baseUrl + nbPage;
+			System.out.println("scraping page : " + url);
+			Document doc;
+			doc = Jsoup.connect(url).get();
+			// scriptTags =
+			// doc.getElementsByClass("project-thumbnail-wrap");
+			scriptTags = doc.getElementsByAttribute("data-project_pid");
+
+			if (!scriptTags.isEmpty()) {
+				// récupération du JSON contenant les infos de chaque projet
+				Collection<JSONObject> collection = new ArrayList<>();
+				for (int i = 0; i < scriptTags.size(); i++) {
+					Element element = scriptTags.get(i);
+					String urlProjet = "https://www.kickstarter.com"
+							+ element.getElementsByAttribute("href").attr("href");
+					collection.add(buildJSONObject(urlProjet));
+				}
+
+				// constitution du JSON
+				JSONObject result = new JSONObject();
+				result.put("url", url);
+				result.put("results", collection);
+				result.put("date", new Date().toString());
+
+				String fileName = outputFileBase + ".page" + nbPage + ".json";
+				FileUtils.write(new File("france", fileName), result.toString(), StandardCharsets.UTF_8);
+			}
+			nbPage++;
+		} while (scriptTags != null && !scriptTags.isEmpty());
+	}
+
+	private static void getOneProject(String url, String destDir, String outputFileName) throws IOException {
+		Elements scriptTags = null;
+		System.out.println("scraping page : " + url);
+		Document doc;
+		doc = Jsoup.connect(url).get();
+		// scriptTags =
+		// doc.getElementsByClass("project-thumbnail-wrap");
+		scriptTags = doc.getElementsByAttribute("data-project_pid");
+
+		if (!scriptTags.isEmpty()) {
+			// récupération du JSON contenant les infos de chaque projet
+			Collection<JSONObject> collection = new ArrayList<>();
+			for (int i = 0; i < scriptTags.size(); i++) {
+				Element element = scriptTags.get(i);
+				String urlProjet = "https://www.kickstarter.com" + element.getElementsByAttribute("href").attr("href");
+				collection.add(buildJSONObject(urlProjet));
+			}
+
+			// constitution du JSON
+			JSONObject result = new JSONObject();
+			result.put("url", url);
+			result.put("results", collection);
+			result.put("date", new Date().toString());
+
+			FileUtils.write(new File(destDir, outputFileName), result.toString(), StandardCharsets.UTF_8);
 		}
 	}
 
