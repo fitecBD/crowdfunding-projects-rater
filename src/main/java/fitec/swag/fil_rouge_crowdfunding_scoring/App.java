@@ -29,15 +29,18 @@ public class App {
 		// Validate.isTrue(args.length == 1, "usage: supply url to fetch");
 		// String url = args[0];
 		// String baseUrl =
-		// "https://www.kickstarter.com/discover/advanced?woe_id=23424819&sort=magic&seed=2487938&page=";
+		// "https://www.kickstarter.com/discover/advanced?woe_id=23424819&sort=magic&seed=2488399&page=";
 		// String outputFileBase = "kickstarter.scotland-uk." +
 		// getFormattedDate();
 		// getJSON1(baseUrl, outputFileBase, 1);
 
-		String url = "https://www.kickstarter.com/discover/advanced?woe_id=0&sort=newest&seed=2487379&page=14";
-		String outputFileName = "kickstarter.JsonBase.2017-04-22.page14.json";
+		int nbPage = 172;
+		String baseUrl = "https://www.kickstarter.com/discover/advanced?woe_id=23424829&sort=newest&seed=2488399&page="
+				+ nbPage;
+		String outputFileName = "C:/Users/Fitec/workspace/crowdfunding-projects-rater/all_results/Deutschland/Deutschland_23424829.page"
+				+ nbPage + ".json";
 		try {
-			getOneProject(url, "base", outputFileName);
+			getJSON1Inner(baseUrl, "test_results/Deutschland", nbPage);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -72,7 +75,8 @@ public class App {
 				Collection<JSONObject> collection = new ArrayList<>();
 				for (int i = 0; i < scriptTags.size(); i++) {
 					Element element = scriptTags.get(i);
-					String urlProjet = "https://www.kickstarter.com" + element.attr("href");
+					String urlProjet = "https://www.kickstarter.com"
+							+ element.getElementsByAttribute("href").attr("href");
 					collection.add(buildJSONObject(urlProjet));
 				}
 
@@ -83,7 +87,7 @@ public class App {
 				result.put("date", new Date().toString());
 
 				String fileName = outputFileBase + ".page" + nbPage + ".json";
-				FileUtils.write(new File("scotland-uk", fileName), result.toString(), StandardCharsets.UTF_8);
+				FileUtils.write(new File("france", fileName), result.toString(), StandardCharsets.UTF_8);
 			}
 			nbPage++;
 		} while (scriptTags != null && !scriptTags.isEmpty());
@@ -123,7 +127,7 @@ public class App {
 		} while (scriptTags != null && !scriptTags.isEmpty());
 	}
 
-	private static void getOneProject(String url, String destDir, String outputFileName) throws IOException {
+	private static void getOnePage(String url, String destDir, String outputFileName) throws IOException {
 		Elements scriptTags = null;
 		System.out.println("scraping page : " + url);
 		Document doc;
